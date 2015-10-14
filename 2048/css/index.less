@@ -1,0 +1,56 @@
+html,body{
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	background-color: #F5F5F5;
+}
+
+.box_shadow(@right: 0px, @bottom: 4px, @blur: 10px, @spread: 10px, @color: #9A9293){
+	-webkit-box-shadow: @right @bottom @blur @spread @color;
+	   -moz-box-shadow: @right @bottom @blur @spread @color;
+	        box-shadow: @right @bottom @blur @spread @color;
+}
+
+#options{
+	@media screen and (min-width: 850px){
+		float: left;
+		position: relative;
+		width: 270px;
+		height: 100%;
+		background-color: #FFED66;
+		div{
+			width: 180px;
+			height: 60px;
+			position: absolute;
+			left: 50%;
+			margin-left: -90px;
+			background-color: #9DCEF8;
+			text-align: center;
+			font: bold 30px/60px "KaiTi","黑体","Microsoft YaHei","宋体",sans-serif;
+			cursor: pointer;
+
+			-webkit-border-radius: 15px;
+			-moz-border-radius: 15px;
+			border-radius: 15px;
+
+			&.restart{
+				top: 30%;
+			}
+			&.go_back{
+				top: 50%;
+			}
+			&:hover{
+				.box_shadow(2px, 3px, 10px, 1px, grey);
+				font-size: 31px;
+			}
+		}
+	}
+}
+
+#canvas_container{
+	overflow: auto;
+	canvas{
+		display: block;
+		margin: 70px auto;
+	}
+}
