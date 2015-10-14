@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>第一个canvas</title>
+  <style type="text/css">
+  	#canvas_father{
+  		width: 700px;
+  		height: 700px;
+  		background-color: rgb(200,150,250);
+  	}
+  </style>
+</head>
+<body>
+  <div id="canvas_father">
+  	<canvas width="500" height="500"></canvas>
+  </div>
+  
+  <script type="text/javascript">
+  	var canvas = document.querySelector('canvas');
+  	var context = canvas.getContext('2d');
+
+
+  	context.save();
+  	//context.setTransform(1, Math.PI/4, 0, 1, 0, 0);
+  	var gradient1 = context.createLinearGradient(0, 0, 400, 400);
+  	gradient1.addColorStop(0, "#ff0000");
+  	gradient1.addColorStop(1, "#0000ff");
+
+  	var gradient2 = context.createRadialGradient(200, 200, 0, 200, 200, 300);
+  	gradient2.addColorStop(0, "#ff0000");
+  	gradient2.addColorStop(1, "#0000ff");
+
+  	context.fillStyle = gradient1;
+  	
+  	//context.fillStyle = gradient2;
+  	//context.fillStyle = 'rgba(255, 0, 0, 0.7)';
+  	context.fillRect(50, 50, 400, 400);
+  	context.strokeStyle = '#00ff00';
+  	context.strokeRect(50, 50, 200, 200);
+
+  	context.restore();
+  	context.beginPath();
+  	context.moveTo(200,200);
+  	context.lineTo(250,300);
+  	context.lineTo(150,300);
+  	context.closePath();
+  	context.stroke();
+
+  	//output image file
+  	var dataUrl = canvas.toDataURL();
+  	var img = new Image();
+  	img.src = dataUrl;
+
+  	img.addEventListener('load', function(e){
+  		document.body.appendChild(img);
+  	});
+  	// context.clearRect(0,0,500,500);
+
+  	//get imagedata
+
+  	var imagedata = context.getImageData(60, 60, 2, 2);
+  	var pixel = imagedata.data;
+  	var result = '';
+  	for (var i = 0; i < 4; i++){
+  		result += pixel[i] + ' ';
+  	}
+  	console.log(result);
+
+  </script>
+
+</body>
+</html>
