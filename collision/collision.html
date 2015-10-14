@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>canvas碰撞</title>
+</head>
+<body>
+  <div>
+  	<button id="play_pause">暂停</button>
+  </div>
+  <canvas width="500" height="500"></canvas>
+
+  <script type="text/javascript">
+  	var canvas = document.querySelector('canvas');
+  	var context = canvas.getContext('2d');
+  	//定义canvas样式
+  	context.fillStyle = '#C6F0FF';
+  	context.strokeStyle = '#1B14DE';
+  	context.lineWidth = 5;
+  	context.fillRect(0, 0, canvas.width, canvas.height);
+  	context.strokeRect(0, 0, canvas.width, canvas.height);
+
+  	//定义向量类
+  	function Vector(x, y){
+  		this.x = x;
+  		this.y = y;
+  		this.length = Math.sqrt(x*x + y*y);
+  	}
+  	Vector.prototype.add = function(v){
+  		var newX = this.x + v.x;
+  		var newY = this.y + v.y;
+  		return new Vector(newX, newY);
+  	}
+  	Vector.prototype.multi = function(v){
+  		return (this.x * v.x) + (this.y * v.y);
+  	}
+  	Vector.prototype.multiNum = function(num){
+  		this.x = this.x * num;
+  		this.y = this.y * num;
+  		this.length = Math.sqrt(this.x*this.x + this.y*this.y);
+  	}
+  	Vector.prototype.cosAngleTo = function(v){
+  		if (this.length * v.length != 0)
+  			return this.multi(v) / (this.length * v.length);
+  		else
+  			return 0;
+  	}
+  	Vector.prototype.shadowTo = function(v){
+  		var cosA = this.cosAngleTo(v);
+  		var shadowLength = this.length * cosA;
+  		var newX = shadowLength * v.x / v.length;
+  		var newY = shadowLength * v.y / v.length;
+  		if (isNaN(newX) || isNaN(newY)){
+  			newX = 0;
+  			newY = 0;
+  		}
+  		return new Vector(newX, newY);	
+  	}
+  	Vector.prototype.normalVector = function(){
+  		return new Vector(1, - this.x / this.y);
+  	}
+
+  	//定义球类
+  	function Ball(number, x, y, radius, vx, vy){
+  		this.number = number;
+  		this.x = x;
+  		this.y = y;
+  		this.radius = radius;
+  		this.vx = vx;
+  		this.vy = vy;
+
+  		this.V = new Vector(vx, vy);			//速度向量
+  		this.m = Math.PI * radius * radius;		//质量
+  		//更新球的速度
+  		this.update = function(V){
+  			this.V = V;
+  			this.vx = V.x;
+  			this.vy = V.y;
+  		}
+  	}
+
+  	//随机创建球对象
+	var ballArr = [];
+  	function createBalls(ballNum){
+  		var cnt = 0;
+	  	for (var i = 0; i < ballNum; i++){
+	  		//随机产生各参数
+	  		var radius = Math.random() *15 + 15;
+	  		//var radius = 25;
+	  		var x = Math.random() * (canvas.width - 2*radius) + radius;
+	  		var y = Math.random() * (canvas.height - 2*radius) + radius;
+	  		var vx = Math.random() * 6 - 3;
+	  		var vy = Math.random() * 6 - 3;
+
+	  		//判断是否有ball重叠
+	  		var overlap = false;
+	  		for (var j = 0; j < ballArr.length; j++){
+	  			var dis = Math.sqrt( Math.pow(ballArr[j].x -x, 2) + Math.pow(ballArr[j].y -y, 2));
+	  			if (dis <= ballArr[j].radius + radius + 10){
+	  				overlap = true;
+	  				break;
+	  			}
+	  		}
+
+	  		if (!overlap){
+		  		var newBall = new Ball(i, x, y, radius, vx, vy);
+		  		ballArr.push(newBall);
+	  		}
+	  		else{
+	  			i--;	//抛弃本次生成的ball数据，增加循环次数
+	  		}
+	  		//防止死循环，canvas不够位置放下所有的ball
+	  		cnt ++;
+	  		if (cnt > ballNum*2){
+	  			break;
+	  		}
+	  	}
+  	}
+
+  	//检测碰撞及处理
+  	function checkCollision(ball1, ball2){
+  		var nextX1 = ball1.x + ball1.vx;
+  		var nextY1 = ball1.y + ball1.vy;
+  		var nextX2 = ball2.x + ball2.vx;
+  		var nextY2 = ball2.y + ball2.vy;
+  		//判断下一帧是否碰撞，而不是当前帧，防止粘连
+		var dis = Math.sqrt( Math.pow(nextX1-nextX2, 2) + Math.pow(nextY1-nextY2, 2) );
+		if (dis > ball1.radius + ball2.radius){
+			return false;	
+		}
+		//发生碰撞
+		//圆心连线向量、法向量
+		var centerVector = new Vector(ball1.x - ball2.x, ball1.y - ball2.y);
+		var centerNormalVector = centerVector.normalVector();
+
+		//分向量
+		var v1_radius = ball1.V.shadowTo(centerVector);
+		var v1_cut = ball1.V.shadowTo(centerNormalVector);
+		var v2_radius = ball2.V.shadowTo(centerVector);
+		var v2_cut = ball2.V.shadowTo(centerNormalVector);
+
+		//判断是碰撞方向是相对还是追赶
+		var consRadius = v1_radius.multi(v2_radius);
+		if (consRadius >0){		//同向追赶
+			var v1_radius_new = ( (ball1.m-ball2.m)*v1_radius.length + 2*ball2.m*v2_radius.length ) / (ball1.m+ball2.m);
+			var v2_radius_new = ( (ball2.m-ball1.m)*v2_radius.length + 2*ball1.m*v1_radius.length ) / (ball1.m+ball2.m);
+		}
+		else{
+			var v1_radius_new = ( (ball1.m-ball2.m)*v1_radius.length - 2*ball2.m*v2_radius.length ) / (ball1.m+ball2.m);
+			var v2_radius_new = ( (ball2.m-ball1.m)*v2_radius.length - 2*ball1.m*v1_radius.length ) / (ball1.m+ball2.m);
+		}
+		//更新圆心连线方向分向量
+		v1_radius.multiNum(v1_radius_new / v1_radius.length);
+		v2_radius.multiNum(v2_radius_new / v2_radius.length);
+
+		//生成球的新速度向量
+		ball1.update(v1_radius.add(v1_cut))
+		ball2.update(v2_radius.add(v2_cut))
+  	}
+
+  	//判断动画的开始或暂停
+  	var animationPlay = true;
+  	//主动画函数
+  	function animation(){
+  		if (!animationPlay)
+  			return;
+
+  		context.clearRect(0, 0, canvas.width, canvas.height);
+	  	context.fillRect(0, 0, canvas.width, canvas.height);
+	  	context.strokeRect(0, 0, canvas.width, canvas.height);
+
+	  	context.save();
+	  	context.fillStyle = '#CE9927';
+	  	context.strokeStyle = '#000';
+	  	context.lineWidth = 3;
+	  	for (var i = 0; i < ballArr.length; i++) {
+	  		//当前ball对象
+	  		var curBall = ballArr[i];
+	  		//左右边界反弹
+	  		if (curBall.x + curBall.radius >=canvas.width || curBall.x - curBall.radius <= 0){
+	  			curBall.update(new Vector(-curBall.vx, curBall.vy));
+	  		}
+	  		if (curBall.y + curBall.radius >=canvas.height || curBall.y - curBall.radius <= 0){
+	  			curBall.update(new Vector(curBall.vx, -curBall.vy));
+	  		}
+	  		//检测是否与其它球碰撞，有则反弹
+	  		for (var j = 0; j < ballArr.length; j++){
+	  			if (i != j){
+	  				checkCollision(ballArr[j], curBall);
+	  			}
+	  		}
+	  		//移动球
+	  		curBall.x += curBall.vx;
+	  		curBall.y += curBall.vy;
+
+		  	context.beginPath();
+		  	context.arc(curBall.x, curBall.y, curBall.radius, 0, Math.PI*2, false);
+		  	context.closePath();
+		  	context.stroke();
+		  	context.fill();
+	  	}
+		context.restore();  	
+
+		//重复调用
+	  	setTimeout(arguments.callee, 15);
+  	}
+
+
+  	//主函数入口
+  	(function main(){
+  		//创建ball对象
+  		createBalls(10);
+	  	//默认自动播放
+	  	animation();
+	  	//绑定按钮点击事件
+	  	var button = document.querySelector('#play_pause');
+	  	button.addEventListener('click', function(e){
+	  		if (this.innerText == '播放'){
+	  			this.innerText = '暂停';
+	  			animationPlay = true;
+	  			animation();	//播放动画
+	  		}
+	  		else{
+	  			this.innerText = '播放';
+	  			animationPlay = false;
+	  		}
+	  	});
+  	})();
+  </script>
+
+</body>
+</html>
