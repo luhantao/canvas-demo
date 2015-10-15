@@ -1,5 +1,5 @@
 define('dyadicArray', ['jquery'], function($){
-	var array;
+	var array = [];
 
 	function randomArray(size){
 		array = [];
@@ -77,6 +77,9 @@ define('dyadicArray', ['jquery'], function($){
 		},
 		array: function(){
 			return array;
+		},
+		setArray: function(value){
+			array = value;
 		}
 	};
 });

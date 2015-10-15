@@ -1,16 +1,16 @@
-define('move', ['jquery', 'canvas', 'dyadicArray'], function($, canvas, dyadicArray){
+define('move', ['jquery', 'canvas', 'dyadicArray', 'history'], function($, canvas, dyadicArray, history){
 	return function(){
 		$(window).on('keydown', function(event){
 			var keyCode = event.keyCode;
 			if (keyCode >36 && keyCode < 41){
 				event.preventDefault();
 				var array = dyadicArray.array();
+				var hasChanged = false;
 
 				switch(keyCode){
 					case 37:
 					//向左
 						// console.log('left');
-						var hasChanged = false;
 						for (var i = 0; i < array.length; i++){
 							var row = [];
 							for (var j = 0; j < array.length; j++){
@@ -43,17 +43,11 @@ define('move', ['jquery', 'canvas', 'dyadicArray'], function($, canvas, dyadicAr
 							}
 						}
 
-						//重新绘制canvas
-						if (hasChanged){
-							canvas.paint();
-							canvas.paintNewOne();
-						}
 						break;
 
 					case 38:
 					//向上
 						// console.log('up');
-						var hasChanged = false;
 						for (var j = 0; j < array.length; j++){
 							var col = [];
 							//按列将非0的格子取出
@@ -88,17 +82,11 @@ define('move', ['jquery', 'canvas', 'dyadicArray'], function($, canvas, dyadicAr
 							}
 						}
 
-						//重新绘制canvas
-						if (hasChanged){
-							canvas.paint();
-							canvas.paintNewOne();
-						}
 						break;
 
 					case 39:
 					//向右
 						// console.log('right');
-						var hasChanged = false;
 						for (var i = 0; i < array.length; i++){
 							var row = [];
 							for (var j = 0; j < array.length; j++){
@@ -131,17 +119,11 @@ define('move', ['jquery', 'canvas', 'dyadicArray'], function($, canvas, dyadicAr
 							}
 						}
 
-						//重新绘制canvas
-						if (hasChanged){
-							canvas.paint();
-							canvas.paintNewOne();
-						}
 						break;
 
 					case 40:
 					//向下
 						// console.log('down');
-						var hasChanged = false;
 						for (var j = 0; j < array.length; j++){
 							var col = [];
 							//按列将非0的格子取出
@@ -175,12 +157,14 @@ define('move', ['jquery', 'canvas', 'dyadicArray'], function($, canvas, dyadicAr
 							}
 						}
 
-						//重新绘制canvas
-						if (hasChanged){
-							canvas.paint();
-							canvas.paintNewOne();
-						}
 						break;
+				}
+
+				//重新绘制canvas
+				if (hasChanged){
+					canvas.paint();
+					canvas.paintNewOne();
+					history.saveOneStep(array);
 				}
 			}
 		});
